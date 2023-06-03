@@ -21,12 +21,15 @@ import com.qualcomm.hardware.lynx.LynxModule;
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
+import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.IMU;
 import com.qualcomm.robotcore.hardware.PIDFCoefficients;
+import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.hardware.VoltageSensor;
 import com.qualcomm.robotcore.hardware.configuration.typecontainers.MotorConfigurationType;
 
+import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.teamcode.trajectorysequence.TrajectorySequence;
 import org.firstinspires.ftc.teamcode.trajectorysequence.TrajectorySequenceBuilder;
@@ -54,9 +57,9 @@ import static org.firstinspires.ftc.teamcode.drive.DriveConstants.kV;
  */
 @Config
 public class SampleTankDrive extends TankDrive {
-    public static PIDCoefficients AXIAL_PID = new PIDCoefficients(10, 0, 0);
-    public static PIDCoefficients CROSS_TRACK_PID = new PIDCoefficients(10, 0, 0);
-    public static PIDCoefficients HEADING_PID = new PIDCoefficients(10, 0, 0);
+    public static PIDCoefficients AXIAL_PID = new PIDCoefficients(6, 0, 0);
+    public static PIDCoefficients CROSS_TRACK_PID = new PIDCoefficients(6, 0, 0);
+    public static PIDCoefficients HEADING_PID = new PIDCoefficients(6, 0, 0);
 
     public static double VX_WEIGHT = 1;
     public static double OMEGA_WEIGHT = 1;
@@ -69,6 +72,7 @@ public class SampleTankDrive extends TankDrive {
     private TrajectoryFollower follower;
 
     private List<DcMotorEx> motors, leftMotors, rightMotors;
+    private Servo steer;
     private IMU imu;
 
     private VoltageSensor batteryVoltageSensor;
@@ -93,14 +97,16 @@ public class SampleTankDrive extends TankDrive {
         imu.initialize(parameters);
 
         // add/remove motors depending on your robot (e.g., 6WD)
-        DcMotorEx leftFront = hardwareMap.get(DcMotorEx.class, "lm");
-        DcMotorEx leftRear = hardwareMap.get(DcMotorEx.class, "lm");
-        DcMotorEx rightRear = hardwareMap.get(DcMotorEx.class, "rm");
-        DcMotorEx rightFront = hardwareMap.get(DcMotorEx.class, "rm");
+        DcMotorEx leftFront = hardwareMap.get(DcMotorEx.class, "leftMotor");
+        DcMotorEx rightFront = hardwareMap.get(DcMotorEx.class, "rightMotor");
+        rightFront.setDirection(DcMotorSimple.Direction.REVERSE);
+//        leftFront.setDirection(DcMotorSimple.Direction.REVERSE);
 
-        motors = Arrays.asList(leftFront, leftRear, rightRear, rightFront);
-        leftMotors = Arrays.asList(leftFront, leftRear);
-        rightMotors = Arrays.asList(rightFront, rightRear);
+        steer = hardwareMap.get(Servo.class, "steer");
+
+        motors = Arrays.asList(leftFront, rightFront);
+        leftMotors = Arrays.asList(leftFront);
+        rightMotors = Arrays.asList(rightFront);
 
         for (DcMotorEx motor : motors) {
             MotorConfigurationType motorConfigurationType = motor.getMotorType().clone();
@@ -119,6 +125,7 @@ public class SampleTankDrive extends TankDrive {
         }
 
         // for instance, setLocalizer(new ThreeTrackingWheelLocalizer(...));
+        setLocalizer(new TwoWheelTrackingLocalizer(hardwareMap, this));
 
         trajectorySequenceRunner = new TrajectorySequenceRunner(
                 follower, HEADING_PID, batteryVoltageSensor,
@@ -226,22 +233,50 @@ public class SampleTankDrive extends TankDrive {
     public void setWeightedDrivePower(Pose2d drivePower) {
         Pose2d vel = drivePower;
 
-        if (Math.abs(drivePower.getX()) + Math.abs(drivePower.getHeading()) > 1) {
-            // re-normalize the powers according to the weights
-            double denom = VX_WEIGHT * Math.abs(drivePower.getX())
-                    + OMEGA_WEIGHT * Math.abs(drivePower.getHeading());
-
-            vel = new Pose2d(
-                    VX_WEIGHT * drivePower.getX(),
-                    0,
-                    OMEGA_WEIGHT * drivePower.getHeading()
-            ).div(denom);
-        } else {
+//        if (Math.abs(drivePower.getX()) + Math.abs(drivePower.getHeading()) > 1) {
+//            // re-normalize the powers according to the weights
+//            double denom = VX_WEIGHT * Math.abs(drivePower.getX())
+//                    + OMEGA_WEIGHT * Math.abs(drivePower.getHeading());
+//
+//            vel = new Pose2d(
+//                    VX_WEIGHT * drivePower.getX(),
+//                    0,
+//                    OMEGA_WEIGHT * drivePower.getHeading()
+//            ).div(denom);
+//        } else {
             // Ensure the y axis is zeroed out.
             vel = new Pose2d(drivePower.getX(), 0, drivePower.getHeading());
-        }
+//        }
 
         setDrivePower(vel);
+    }
+
+    public String outputable;
+
+    @Override
+    public void setDrivePower(Pose2d pose)
+    {
+        outputable = "x: " + pose.getX() + "    h: " + pose.getHeading();
+
+        steer.setPosition(turnToSteer(pose.getHeading()));
+        motors.forEach((motor) -> motor.setPower(-pose.getX()));
+    }
+
+    private double turnToSteer(double turn)
+    {
+        turn *= LogDriving.steerMulti;
+        turn += LogDriving.zeroSteer;
+        if (LogDriving.steerMulti > 0)
+        {
+            turn = Math.min(turn, LogDriving.zeroSteer + LogDriving.steerMulti);
+            turn = Math.max(turn, LogDriving.zeroSteer - LogDriving.steerMulti);
+        }
+        else
+        {
+            turn = Math.max(turn, LogDriving.zeroSteer + LogDriving.steerMulti);
+            turn = Math.min(turn, LogDriving.zeroSteer - LogDriving.steerMulti);
+        }
+        return turn;
     }
 
     @NonNull
@@ -265,17 +300,22 @@ public class SampleTankDrive extends TankDrive {
         for (DcMotorEx rightMotor : rightMotors) {
             rightSum += encoderTicksToInches(rightMotor.getVelocity());
         }
+
         return Arrays.asList(leftSum / leftMotors.size(), rightSum / rightMotors.size());
     }
 
     @Override
     public void setMotorPowers(double v, double v1) {
-        for (DcMotorEx leftMotor : leftMotors) {
-            leftMotor.setPower(v);
-        }
-        for (DcMotorEx rightMotor : rightMotors) {
-            rightMotor.setPower(v1);
-        }
+        double forward = (v + v1) / 2;
+        double turn = (v - v1) / 2;
+
+        setDrivePower(new Pose2d(forward, 0, turn));
+//        for (DcMotorEx leftMotor : leftMotors) {
+//            leftMotor.setPower(forward);
+//        }
+//        for (DcMotorEx rightMotor : rightMotors) {
+//            rightMotor.setPower(forward);
+//        }
     }
 
     @Override

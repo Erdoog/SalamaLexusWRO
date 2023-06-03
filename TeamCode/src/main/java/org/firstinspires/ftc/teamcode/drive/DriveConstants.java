@@ -10,10 +10,10 @@ public class DriveConstants {
     /*
      * These are motor constants that should be listed online for your motors.
      */
-    public static final double TICKS_PER_REV = 537.6;
-    public static final double MAX_RPM = 312.5;
+    public static double TICKS_PER_REV = 384.5;
+    public static double MAX_RPM = 435;
 
-    /*
+      /*
      * Set RUN_USING_ENCODER to true to enable built-in hub velocity control using drive encoders.
      * Set this flag to false if drive encoders are not present and an alternative localization
      * method is in use (e.g., tracking wheels).
@@ -34,19 +34,19 @@ public class DriveConstants {
      * angular distances although most angular parameters are wrapped in Math.toRadians() for
      * convenience. Make sure to exclude any gear ratio included in MOTOR_CONFIG from GEAR_RATIO.
      */
-    public static double WHEEL_RADIUS = 1.57;//gear ratio 1.2692 prev
-    public static double GEAR_RATIO = 1.44; // output (wheel) speed / input (motor) speed
+    public static double WHEEL_RADIUS = 1.77165;//gear ratio 1.2692 prev
+    public static double GEAR_RATIO = 1.277; // output (wheel) speed / input (motor) speed
     public static double TRACK_WIDTH = 9.18; // in
 
     /*
      * These are the feedforward parameters used to model the drive motor behavior. If you are using
-     * the built-in velocity PID, *these values are fine as is*. However, if you do not have drive
+     * the built-in velocity PID, *these values are fine as is*. Howeve/'r, if you do not have drive
      * motor encoders or have elected not to use them for velocity control, these values should be
      * empirically tuned.
      */
-    public static double kV = 0.0186;
-    public static double kA = 0.00317;
-    public static double kStatic = 0.01;
+    public static double kV = 0.0115;
+    public static double kA = 0.0025;
+    public static double kStatic = 0.001;
 
     /*
      * These values are used to generate the trajectories for you robot. To ensure proper operation,
@@ -88,13 +88,13 @@ public class DriveConstants {
      * https://github.com/acmerobotics/road-runner-quickstart/issues/91
 
      */
-    public static double MAX_VEL = 38;
-    public static double MAX_ACCEL = 37;
-    public static double MAX_ANG_VEL = 1.4;
-    public static double MAX_ANG_ACCEL = 1.4;
+    public static double MAX_VEL = 15;
+    public static double MAX_ACCEL = 15;
+    public static double MAX_ANG_VEL = 0.5;
+    public static double MAX_ANG_ACCEL = 1;
 
     public static RevHubOrientationOnRobot.LogoFacingDirection LOGO_FACING_DIR =
-            RevHubOrientationOnRobot.LogoFacingDirection.BACKWARD;
+            RevHubOrientationOnRobot.LogoFacingDirection.UP;
     public static RevHubOrientationOnRobot.UsbFacingDirection USB_FACING_DIR =
             RevHubOrientationOnRobot.UsbFacingDirection.LEFT;
 

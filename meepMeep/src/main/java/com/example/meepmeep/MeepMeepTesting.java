@@ -7,10 +7,9 @@ import com.noahbres.meepmeep.roadrunner.DefaultBotBuilder;
 import com.noahbres.meepmeep.roadrunner.entity.RoadRunnerBotEntity;
 
 public class MeepMeepTesting {
-
     public static void main(String[] args) {
         MeepMeep meepMeep = new MeepMeep(800);
-        Pose2d startPose = new Pose2d(-65.1, -36, Math.toRadians(0));
+        Pose2d startPose = new Pose2d(0, -50, Math.toRadians(180));
 
         RoadRunnerBotEntity myBot = new DefaultBotBuilder(meepMeep)
                 // Set bot constraints: maxVel, maxAccel, maxAngVel, maxAngAccel, track width
@@ -18,18 +17,16 @@ public class MeepMeepTesting {
 
                 .followTrajectorySequence(drive ->
                                 drive.trajectorySequenceBuilder(startPose)
-                                        .lineToConstantHeading(new Vector2d(-3, -36))
-                                        .lineToConstantHeading(new Vector2d(-3, -26.5))
-                                        .lineToConstantHeading(new Vector2d(-3 , -36))
-                                        .lineToConstantHeading(new Vector2d(-12, -36))
-                                        .lineToConstantHeading(new Vector2d(-12, -66.5))
-                                        .lineToConstantHeading(new Vector2d(-13, -44))
-                                        .splineTo(new Vector2d(-1, -25), Math.toRadians(-315))
-                                        .setTangent(Math.toRadians(-135))
-                                        .splineTo(new Vector2d(-12, -48), Math.toRadians(-90))
-//                                      .lineToSplineHeading(new Pose2d(-12, -12, Math.toRadians(0)))
-                                        .lineToSplineHeading(new Pose2d(-12, -34, Math.toRadians(0)))
-//                                      .lineToSplineHeading(new Pose2d(-12, -60, Math.toRadians(0)))
+                                        .lineToConstantHeading(new Vector2d(20, -50))
+//                                        .splineTo(new Vector2d(48, -40), Math.toRadians(60))
+                                        .splineTo(new Vector2d(54, -14), Math.toRadians(90))
+//                                        .lineToConstantHeading(new Vector2d(54, 24))
+//                                        .splineTo(new Vector2d(20, 60), Math.toRadians(180))
+//                                        .lineToConstantHeading(new Vector2d(-20, 60))
+//                                        .splineTo(new Vector2d(-54, 24), Math.toRadians(270))
+//                                        .lineToConstantHeading(new Vector2d(-54, -14))
+//                                        .splineTo(new Vector2d(-20, -50), Math.toRadians(360))
+//                                        .lineToConstantHeading(new Vector2d(20, -50))
                                         .build()
                 );
 
